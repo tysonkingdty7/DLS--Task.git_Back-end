@@ -1,0 +1,6 @@
+@DLS__Task.git_Back_end_HostAddress = http://localhost:5032
+
+GET {{DLS__Task.git_Back_end_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
