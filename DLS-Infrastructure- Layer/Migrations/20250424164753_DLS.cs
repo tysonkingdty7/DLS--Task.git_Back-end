@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DLS_Infrastructure__Layer.Migrations
 {
     /// <inheritdoc />
-    public partial class DLS2 : Migration
+    public partial class DLS : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -36,7 +36,6 @@ namespace DLS_Infrastructure__Layer.Migrations
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     phone = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
                     CartID = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -224,7 +223,6 @@ namespace DLS_Infrastructure__Layer.Migrations
                     ProductID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProductName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Image = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Stoke = table.Column<int>(type: "int", nullable: false),
                     CategoryID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProviderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
@@ -252,14 +250,34 @@ namespace DLS_Infrastructure__Layer.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ProductMedia",
+                columns: table => new
+                {
+                    ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MeadiUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProductID = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductMedia", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_ProductMedia_Product_ProductID",
+                        column: x => x.ProductID,
+                        principalSchema: "Product",
+                        principalTable: "Product",
+                        principalColumn: "ProductID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "3bcace06-6488-4745-b8e8-bbab971702fc", null, "Admin", "ADMIN" },
-                    { "93c5cc73-fe50-41cd-8d4b-08f26be057d6", null, "User", "USER" },
-                    { "bb3d6ee5-4fc0-4615-a0af-9d926221f58c", null, "Manager", "MANAGER" }
+                    { "34a5230d-7359-4351-aad7-0c2ca6438a95", null, "User", "USER" },
+                    { "8158609d-530a-4f38-b9e8-9c6461b27f67", null, "Admin", "ADMIN" },
+                    { "eec061c3-fe9b-4a46-ac3c-d7b0e278efa7", null, "Manager", "MANAGER" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -329,6 +347,11 @@ namespace DLS_Infrastructure__Layer.Migrations
                 schema: "Product",
                 table: "Product",
                 column: "ProviderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductMedia_ProductID",
+                table: "ProductMedia",
+                column: "ProductID");
         }
 
         /// <inheritdoc />
@@ -350,11 +373,14 @@ namespace DLS_Infrastructure__Layer.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Product",
-                schema: "Product");
+                name: "ProductMedia");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "Product",
+                schema: "Product");
 
             migrationBuilder.DropTable(
                 name: "CartItems");

@@ -15,7 +15,6 @@ namespace DLS_Infrastructure__Layer.configration
         {
             builder.ToTable("User", "User");
             builder.Property(u => u.name).IsRequired().HasMaxLength(50);
-            builder.Property(u => u.password).IsRequired();
             builder.Property(u => u.phone).IsRequired().HasMaxLength(15);
             builder.HasMany(u => u.Products).WithOne(p => p.ProductUser).HasForeignKey(p => p.ProviderId);
 

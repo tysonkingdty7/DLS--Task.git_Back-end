@@ -3,14 +3,23 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Application_Layer.IRepo.Services;
 using DLs.Helpers;
+using DLS.Mapper;
+using DLS_applcation_layer.DLS_Repository.CartRepository;
+using DLS_applcation_layer.DLS_Repository.CartRepositry;
+using DLS_applcation_layer.DLS_Repository.CategoryRepostry;
+using DLS_applcation_layer.DLS_Repository.ProductsRepository;
+using DLS_applcation_layer.DLS_Servises;
+using DLS_applcation_layer.DLS_Servises.ProductsSevises;
 using DLS_applcation_layer.DLS_Servises.User_Servise;
 using DLS_Domin_layer.DLS_Repository;
 using DLS_Domin_layer.DLS_Repository.Auther;
 using DLS_Domin_layer.DLS_Servises.User_Servise;
+using DLS_Domin_layer.hleper;
 using DLS_Domin_layer.Modules;
 using DLS_Infrastructure__Layer.DLS_Infrastructure__Layer;
 using Infrastructure_Layer.Repo;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,11 +41,18 @@ public class Program
             x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
         // Add services to the container.
         builder.Services.AddScoped<JwtHelper>();
-        builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWt"));
+        builder.Services.Configure<JWT>(builder.Configuration.GetSection("JwtSettings"));
         builder.Services.AddScoped<IUnitofWork, UnitofWork>();
         builder.Services.AddScoped<IUserServies,UserServies>();
         builder.Services.AddScoped<IAutherReposirty, AutherRopsitry>();
+        builder.Services.AddScoped<ICartRepository, CartRepository>();
+        builder.Services.AddAutoMapper(typeof(productProfile), typeof(CatgoryProfile));
+        builder.Services.AddScoped<ImageServises>();
+        builder.Services.AddScoped<ICategorytRepository, CategoryRepositry>();
+        builder.Services.AddScoped<IProductServise,ProductServies>();
+        builder.Services.AddScoped<IProductsRepoistory, ProductRepoistory>();
 
+        builder.Services.AddAutoMapper(typeof(Program).Assembly);
         builder.Services.AddScoped(typeof(IBaseRepo<>), typeof(BaseRepository<>));
 
         builder.Services.AddIdentity<User, IdentityRole>(option =>
