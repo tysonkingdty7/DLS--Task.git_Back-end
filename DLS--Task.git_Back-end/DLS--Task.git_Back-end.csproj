@@ -29,4 +29,8 @@
     <ProjectReference Include="..\DLS-Infrastructure- Layer\DLS-Infrastructure- Layer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\image\" />
+  </ItemGroup>
+
 </Project>
