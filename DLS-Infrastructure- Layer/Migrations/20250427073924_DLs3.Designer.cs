@@ -4,6 +4,7 @@ using DLS_Infrastructure__Layer.DLS_Infrastructure__Layer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DLS_Infrastructure__Layer.Migrations
 {
     [DbContext(typeof(APPDbcontext))]
-    partial class APPDbcontextModelSnapshot : ModelSnapshot
+    [Migration("20250427073924_DLs3")]
+    partial class DLs3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

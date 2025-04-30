@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DLS_Infrastructure__Layer.Migrations
 {
     [DbContext(typeof(APPDbcontext))]
-    [Migration("20250423121743_DLS-2")]
-    partial class DLS2
+    [Migration("20250424164753_DLS")]
+    partial class DLS
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -104,10 +104,6 @@ namespace DLS_Infrastructure__Layer.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("Image")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -191,10 +187,6 @@ namespace DLS_Infrastructure__Layer.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("phone")
                         .IsRequired()
                         .HasMaxLength(15)
@@ -211,6 +203,26 @@ namespace DLS_Infrastructure__Layer.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Domein_Layer.Models.ProductMedia", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MeadiUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ProductID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ProductID");
+
+                    b.ToTable("ProductMedia");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -242,19 +254,19 @@ namespace DLS_Infrastructure__Layer.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "3bcace06-6488-4745-b8e8-bbab971702fc",
+                            Id = "8158609d-530a-4f38-b9e8-9c6461b27f67",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "93c5cc73-fe50-41cd-8d4b-08f26be057d6",
+                            Id = "34a5230d-7359-4351-aad7-0c2ca6438a95",
                             Name = "User",
                             NormalizedName = "USER"
                         },
                         new
                         {
-                            Id = "bb3d6ee5-4fc0-4615-a0af-9d926221f58c",
+                            Id = "eec061c3-fe9b-4a46-ac3c-d7b0e278efa7",
                             Name = "Manager",
                             NormalizedName = "MANAGER"
                         });
@@ -411,6 +423,17 @@ namespace DLS_Infrastructure__Layer.Migrations
                     b.Navigation("ProductUser");
                 });
 
+            modelBuilder.Entity("Domein_Layer.Models.ProductMedia", b =>
+                {
+                    b.HasOne("DLS_Domin_layer.Modules.Product", "Products")
+                        .WithMany("Image")
+                        .HasForeignKey("ProductID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Products");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -475,6 +498,11 @@ namespace DLS_Infrastructure__Layer.Migrations
             modelBuilder.Entity("DLS_Domin_layer.Modules.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("DLS_Domin_layer.Modules.Product", b =>
+                {
+                    b.Navigation("Image");
                 });
 
             modelBuilder.Entity("DLS_Domin_layer.Modules.User", b =>

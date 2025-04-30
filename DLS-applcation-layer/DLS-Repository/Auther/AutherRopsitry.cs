@@ -26,102 +26,118 @@ namespace DLS_Domin_layer.DLS_Repository.Auther
         private readonly IConfiguration _config;
 
 
-        public AutherRopsitry(APPDbcontext appContext, JwtHelper jwtHelper, UserManager<User> userManager, RoleManager<IdentityRole> roleManager) : base(appContext)
+        public AutherRopsitry(APPDbcontext appContext, JwtHelper jwtHelper, UserManager<User> userManager, RoleManager<IdentityRole> roleManager, IConfiguration config) : base(appContext)
         {
             _appContext = appContext;
             _jwtHelper = jwtHelper;
             _userManager = userManager;
             _roleManager = roleManager;
+            _config = config;
         }
 
         public async Task<AuthModel> LoginModel(LoginDTO loginModel)
         {
-            var authModel = new AuthModel();
-            var user = await _userManager.FindByEmailAsync(loginModel.Email);
-
-            if (user == null)
+            try
             {
-                authModel.IsAuthenticated = false;
-                authModel.Message = "Invalid email or password.";
-                return authModel;
+                var AuthUser = new AuthModel();
+                var user = await _userManager.FindByEmailAsync(loginModel.Email);
+                if (user == null || !await _userManager.CheckPasswordAsync(user, loginModel.Password))
+                {
+                    AuthUser.IsAuthenticated = false;
+                    AuthUser.Message = "Invalid email or password";
+                    return AuthUser;
+                }
+                var token = await CreateToken(user);
+                var roles = await _userManager.GetRolesAsync(user);
+                AuthUser.IsAuthenticated = true;
+                AuthUser.UserName = user.name;
+                AuthUser.Email = user.Email;
+                AuthUser.Id = user.Id;
+                AuthUser.Token = new JwtSecurityTokenHandler().WriteToken(token);
+                AuthUser.Roles = roles.ToList();
+                return AuthUser;
+            }
+            catch (Exception ex) {
+                // تسجيل الخطأ إذا كنت تستخدم نظام تسجيل (مثل Serilog أو NLog)
+                return new AuthModel
+                {
+                    IsAuthenticated = false,
+                    Message = $"An unexpected error occurred: {ex.Message}"
+                };
             }
 
-            var passwordHasher = new PasswordHasher<User>();
-            var verificationResult = passwordHasher.VerifyHashedPassword(user, user.password, loginModel.Password);
-
-            if (verificationResult == PasswordVerificationResult.Failed)
-            {
-                authModel.IsAuthenticated = false;
-                authModel.Message = "Invalid email or password.";
-                return authModel;
             }
 
-            var token = await CreateToken(user);
-            authModel.Email = user.Email;
-            authModel.Token = new JwtSecurityTokenHandler().WriteToken(token);
-            authModel.UserName = user.UserName;
-            authModel.Roles = (await _userManager.GetRolesAsync(user)).ToList();
-            authModel.Id = user.Id;
-
-            return authModel;
-        }
 
         public async Task<AuthModel> RegisterModelAsync(RegisterDTO regsterModel)
         {
-            var user = new User
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                name = regsterModel.name,
-                Email = regsterModel.email,
-                UserName = regsterModel.email, // تعيين اسم المستخدم كالبريد الإلكتروني
-                phone = regsterModel.phone
-            };
-
-            // إنشاء المستخدم باستخدام UserManager
-            var result = await _userManager.CreateAsync(user, regsterModel.password);
-            if (!result.Succeeded)
-            {
-                var erorr = string.Empty;
-                foreach (var err in result.Errors)
+                var user = new User
                 {
-                    erorr += $"{err.Description},";
+                    Id = Guid.NewGuid().ToString(),
+                    name = regsterModel.name,
+                    Email = regsterModel.email,
+                    UserName = regsterModel.email, // تعيين اسم المستخدم كالبريد الإلكتروني
+                    phone = regsterModel.phone
+                };
+
+                // إنشاء المستخدم باستخدام UserManager
+                var result = await _userManager.CreateAsync(user, regsterModel.password);
+                if (!result.Succeeded)
+                {
+                    var error = string.Join(", ", result.Errors.Select(e => e.Description));
+                    return new AuthModel
+                    {
+                        IsAuthenticated = false,
+                        Message = $"Error while creating user: {error}"
+                    };
                 }
-                return new AuthModel { Message = erorr };
-            }
 
-            // إضافة المستخدم إلى الأدوار
-            if (regsterModel.Role != null && regsterModel.Role.Any())
-            {
-                foreach (var role in regsterModel.Role)
+                // إضافة المستخدم إلى الأدوار
+                if (regsterModel.Role != null && regsterModel.Role.Any())
                 {
-                    if (await _roleManager.RoleExistsAsync(role))
+                    foreach (var role in regsterModel.Role)
                     {
-                        await _userManager.AddToRoleAsync(user, role);
-                    }
-                    else
-                    {
-                        return new AuthModel
+                        if (await _roleManager.RoleExistsAsync(role))
                         {
-                            IsAuthenticated = false,
-                            Message = $"Role '{role}' does not exist."
-                        };
+                            await _userManager.AddToRoleAsync(user, role);
+                        }
+                        else
+                        {
+                            return new AuthModel
+                            {
+                                IsAuthenticated = false,
+                                Message = $"Role '{role}' does not exist."
+                            };
+                        }
                     }
                 }
+
+                // إنشاء التوكن
+                var token = await CreateToken(user);
+
+                return new AuthModel
+                {
+                    IsAuthenticated = true,
+                    UserName = user.name,
+                    Email = user.Email,
+                    Id = user.Id,
+                    Token = new JwtSecurityTokenHandler().WriteToken(token),
+                    Roles = regsterModel.Role
+                };
             }
-
-            // إنشاء التوكن
-            var token = await CreateToken(user);
-
-            return new AuthModel
+            catch (Exception ex)
             {
-                IsAuthenticated = true,
-                UserName = user.name,
-                Email = user.Email,
-                Id = user.Id,
-                Token = new JwtSecurityTokenHandler().WriteToken(token),
-                Roles = regsterModel.Role
-            };
+                // تسجيل الخطأ إذا كنت تستخدم نظام تسجيل (مثل Serilog أو NLog)
+                return new AuthModel
+                {
+                    IsAuthenticated = false,
+                    Message = $"An unexpected error occurred: {ex.Message}"
+                };
+            }
         }
+
 
         private async Task<JwtSecurityToken> CreateToken(User user)
         {
@@ -139,13 +155,18 @@ namespace DLS_Domin_layer.DLS_Repository.Auther
             }
             .Union(userclaims)
             .Union(roleclaim);
-            var symkey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]));
+            var jwtKey = _config["JwtSettings:Key"];
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new InvalidOperationException("JwtSettings:Key is not configured.");
+            }
+            var symkey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var signingkey = new SigningCredentials(symkey, SecurityAlgorithms.HmacSha256);
             var jwttoken = new JwtSecurityToken(
-                issuer: _config["JWT:Issuer"],
-                audience: _config["JWT:Audience"],
+                issuer: _config["JwtSettings:Issuer"],
+                audience: _config["JwtSettings:Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddDays(double.Parse(_config["JWT:DurationInDays"])),
+                expires: DateTime.Now.AddDays(double.Parse(_config["JwtSettings:DurationInDays"])),
                 signingCredentials: signingkey);
             return jwttoken;
         }

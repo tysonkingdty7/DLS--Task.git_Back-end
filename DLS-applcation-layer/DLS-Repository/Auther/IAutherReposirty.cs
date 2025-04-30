@@ -14,6 +14,7 @@ namespace DLS_Domin_layer.DLS_Repository.Auther
 
         Task<AuthModel> RegisterModelAsync(RegisterDTO regsterModel);
         Task<AuthModel> LoginModel(LoginDTO loginModel);
+         
 
 
     }

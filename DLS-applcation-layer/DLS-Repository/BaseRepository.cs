@@ -14,7 +14,7 @@ namespace DLS_Domin_layer.DLS_Repository
         public BaseRepository(APPDbcontext appContext)
         {
             _appContext = appContext;
-        }
+        } 
 
 
 
